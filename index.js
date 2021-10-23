@@ -22,10 +22,10 @@ app.use(bodyParser.json({limit:"20mb", extended: true}));
 app.use(bodyParser.urlencoded({limit:"20mb", extended: true}));
 
 var corsOptions = {
-    origin: "http://localhost:3000"
+    origin: 'https://my-atomic-app.netlify.app'
   };
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 const CONNECTION_STRING = 'mongodb://rajuprasad:itsmyPassw0rd%402021@cluster0-shard-00-00.hbcjj.mongodb.net:27017,cluster0-shard-00-01.hbcjj.mongodb.net:27017,cluster0-shard-00-02.hbcjj.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-cn8i28-shard-0&authSource=admin&retryWrites=true&w=majority';
 //const CONNECTION_STRING = 'mongodb://localhost:27017/';
