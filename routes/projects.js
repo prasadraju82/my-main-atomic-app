@@ -1,4 +1,7 @@
 const controller = require("../controller/projects");
+const verifyProjectKey = require("../middlewares/verifyProjectKey");
+const authJwt = require("../middlewares/authJwt");
+const validateinput = require("../middlewares/validateinputs")
 
 module.exports = function(app) {
     app.use(function(req, res, next) {
@@ -9,13 +12,13 @@ module.exports = function(app) {
       next();
     });
   
-    app.get("/api/projects/projectlist/:emailid", controller.getProjectsByUser);
+    app.get("/api/projects/projectlist/:emailid",authJwt.verifyToken, controller.getProjectsByUser);
 
-    app.get("/api/projects/getallprojects", controller.getAllProjects);
+    app.get("/api/projects/getallprojects", authJwt.verifyToken, controller.getAllProjects);
 
-    app.post("/api/projects/createproject", controller.createProject);
+    app.post("/api/projects/createproject",[authJwt.verifyToken, validateinput.validateCreateProject, verifyProjectKey.checkDuplicateProjectKey], controller.createProject);
 
-    app.get("/api/projects/getprojectbykey/:projectKey", controller.getProjectByKey);
+    app.get("/api/projects/getprojectbykey/:projectKey",authJwt.verifyToken, controller.getProjectByKey);
 
-    app.post("/api/projects/updateproject", controller.updateProjectByKey);
+    app.post("/api/projects/updateproject",[authJwt.verifyToken, validateinput.validateUpdateProject] , controller.updateProjectByKey);
   };

@@ -1,7 +1,8 @@
 const config = require("../config/auth.js");
 const User = require("../model/user.js");
 const Role = require("../model/role.js");
-
+const mail = require("../utility/mail/mail.js");
+const mailConstants = require("../constants/mailconstants")
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcrypt");
 
@@ -21,12 +22,23 @@ exports.signUp = (req, res, next) =>{
         role: 1
     });
 
-    user.save((err, user) => {
+    user.save((err, userdetails) => {
         if(err){
             res.status(500).message({message: err});
             return;
         }
-        res.send({message: "Successful"});
+        console.log(req.body.emailId);
+        //send mail
+        const mailContent = {
+            from: mailConstants.FROM_EMAIL_ID,
+            to: req.body.emailId,
+            subject:  "Welcome mail from Atomic",
+            html: mailConstants.THANK_YOU + "<br/>" + "<a href='" + mailConstants.ATOMIC_LINK + req.body.emailId + "'>" + mailConstants.CONFIRM_EMAIL + "</a>"
+        }
+        
+        console.log(mailContent);
+        mail.sendmyMail(mailContent);
+        res.status(200).send({message: "Successful"});
     });
 };
 
@@ -35,7 +47,15 @@ exports.checkuser = (req, res) => {
     let password = req.body.password;
     let emailExist = false;
     console.log(emailid);
-    var userQuery = User.findOne({email: emailid});
+
+    if (!(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(emailid))) {
+        return res.status(200).send({
+            isEmailExist: false,
+            message: "Invalid Email Id"
+        })
+    }
+    
+    var userQuery = User.findOne({email: emailid, isActive: true});
     userQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -54,7 +74,8 @@ exports.checkuser = (req, res) => {
             }
             else{
                 return res.status(200).send({
-                    isEmailExist: false
+                    isEmailExist: false,
+                    message: "Email id does not exist"
                 });
             }
         }

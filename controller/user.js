@@ -1,10 +1,11 @@
 const User = require("../model/user.js");
 const mail = require("../utility/mail/mail.js")
+const mailConstants = require("../constants/mailconstants")
 
 exports.addUser = (req, res) => {
     const user = new User({
         name: req.body.userName,
-        email: req.body.userEmail,
+        email: req.body.emailId,
         gender: req.body.gender,
         isInitialLogin: true,
         isActive: true,
@@ -17,14 +18,23 @@ exports.addUser = (req, res) => {
 
     const mailContent = {
         from: 'hi2alldears@gmail.com',
-        to: req.body.userEmail,
+        to: req.body.emailId,
         subject: 'You have been added to the Atomic team',
         text: 'Log in to http://localhost:3000 with your email id'
     }
     console.log(user);
-    User.create(user).then(function(project){
+    User.create(user).then(function(userdetails){
+
+        //mail send
+        //Send mail
+        const mailContent = {
+            from: mailConstants.FROM_EMAIL_ID,
+            to: req.body.userEmail,
+            subject: mailConstants.YOU_HAVE_BEEN_ADDED,
+            text: mailConstants.LOGGIN_TO
+        }
         mail.sendmyMail(mailContent);
-        res.send({data: project, message: "Success"})
+        res.send({data: userdetails, message: "Success"})
     }).catch(function(err){
         console.log(err);
         res.status(500).send({error: err, message: "Failure"})
@@ -109,3 +119,15 @@ exports.deleteUser = (req, res) => {
     })
 }
 
+exports.activateUser = (req, res) => {
+    let userEmail = req.body.emailid;
+    console.log(userEmail);
+    User.findOneAndUpdate({"email": userEmail},{"$set":{ "isActive": true }})
+    .exec(function(err, user){
+        if(err){
+            res.status(500).send({message: err});
+            return;
+        }
+        res.status(200).send({data: user, message: "Success"})
+    })
+}

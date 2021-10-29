@@ -6,11 +6,12 @@ const TaskNumberTesting = require("../model/tasknumberTesting.js");
 const Project = require("../model/projects.js");
 const mail = require("../utility/mail/mail.js");
 const mailConstants = require("../constants/mailconstants")
+var mongoose = require('mongoose');
 
 exports.getRecentTasksByUser = (req, res) => {
     let userId = req.params.assignedUserId;
     console.log(userId);
-    var taskQuery = Task.find({assignedUserId: userId}).limit(3);
+    var taskQuery = Task.find({assignedUserId: userId}).populate("projectId").limit(6);
     taskQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -71,10 +72,11 @@ exports.updateTaskByTaskId = async (req, res) =>{
     let taskName = req.body.taskName;
     let updatedById = req.body.updatedById;
     let updatedByName = req.body.updatedByName;
+    let statusName = req.body.statusName;
     //console.log(req.body);
     try{
-       let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"taskName": taskName, 
-       "taskTypeId": taskType, "statusId": taskStatus, "priorityId": taskPriority, "taskDesc":taskDesc, 
+       let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"taskName": taskName, "taskTypeId": taskType, 
+       "statusId": taskStatus, "statusName": statusName, "priorityId": taskPriority, "taskDesc":taskDesc, 
        "updatedDateTime": Date.now()}}).exec()
 
        let userAssigned = await User.findOne({_id: task.assignedUserId}).exec();
@@ -93,7 +95,7 @@ exports.updateTaskByTaskId = async (req, res) =>{
         res.status(200).send({data: task, message: "Success"});
     }
     catch(error){
-        res.status(500).send({message: err});
+        res.status(500).send({message: error});
                 return;
     }
 }
@@ -151,6 +153,7 @@ exports.createTask = (req, res) =>{
         estimatedTime : req.body.estimatedTime,
         //actualTime : null,
         statusId : 1,
+        statusName: "Open",
         taskTypeId : req.body.taskTypeId,
         projectId : req.body.projectId,
         assignedUserId : req.body.assignedUserId,
@@ -166,8 +169,10 @@ exports.createTask = (req, res) =>{
         projectName: req.body.projectName
     })
 
-    const documentCount = getLatestTaskNumber();
-    console.log('Hi ' + documentCount);
+    console.log(req.body.projectId);
+
+    // const documentCount = getLatestTaskNumber();
+    // console.log('Hi ' + documentCount);
   
     Project.findOne({_id: req.body.projectId}).then(function(proj){
         
@@ -191,13 +196,18 @@ exports.createTask = (req, res) =>{
                         }
                         console.log('final')
 
-                        const mailContent = {
-                            from: mailConstants.FROM_EMAIL_ID,
-                            to: userAssigned.email,
-                            subject:  taskId + ' : ' + taskName,
-                            text: mailConstants.TASK_ID + taskId + mailConstants.HAS_BEEN_ASSIGNED_TO_YOU
-                        }
-                        mail.sendmyMail(mailContent);
+                        User.findOne({_id: req.body.assignedUserId}).then(user => {
+                            const mailContent = {
+                                from: mailConstants.FROM_EMAIL_ID,
+                                to: user.email,
+                                subject:  task.taskId + ' : ' + task.taskName,
+                                text: mailConstants.TASK_ID + addedtask.taskId + mailConstants.HAS_BEEN_ASSIGNED_TO_YOU
+                            }
+
+                            mail.sendmyMail(mailContent);
+                        })
+                        
+                        
                         res.send({message: "Success"});
                     });
                 }
@@ -217,7 +227,7 @@ const getLatestTaskNumber = () =>{
 exports.getAllTasksByUser = (req, res) => {
     let userId = req.params.assignedUserId;
     console.log(userId);
-    var taskQuery = Task.find({assignedUserId: userId});
+    var taskQuery = Task.find({assignedUserId: userId}).populate("projectId");
     taskQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -242,7 +252,11 @@ exports.getAllTasksByProjectId = (req, res) => {
     let projectId = req.params.projectId;
     let taskStatus = req.params.taskStatus;
 
-    var taskQuery = Task.find({projectId: projectId, statusId: taskStatus});
+    console.log(projectId);
+    console.log(taskStatus);
+    let projId = mongoose.Types.ObjectId(projectId);
+    console.log(projId); // added for ObjectId columns that has reference to another schema
+    var taskQuery = Task.find({"projectId": mongoose.Types.ObjectId(projectId), statusId: taskStatus});
     taskQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -252,7 +266,7 @@ exports.getAllTasksByProjectId = (req, res) => {
         }
         else{
             if(docs !== null){
-                console.log(docs);
+               console.log(docs);
                 let result = [];
                 let sTaskType = "";
                 let sTaskPriority = "";
@@ -288,20 +302,31 @@ exports.updateTaskStatus = (req, res) => {
     })
 }
 
-exports.updateUserTaskId = (req, res) => {
+exports.updateUserTaskId = async (req, res) => {
     let taskId = req.body.taskId;
     let userName = req.body.userName;
     let userId = req.body.userId;
 
-    Task.findOneAndUpdate({"taskId": taskId},{"$set":{"assignedUserId": userId, "updatedDateTime": Date.now()}})
-    .exec(function(err, task){
-        if(err){
-            res.status(500).send({message: err});
-            return;
+    try{
+        let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"assignedUserId": userId, "updatedDateTime": Date.now()}}).exec();
+    
+        let userAssigned = await User.findOne({_id: req.body.userId}).exec();
+        console.log(userAssigned);
+        const mailContent = {
+            from: mailConstants.FROM_EMAIL_ID,
+            to: userAssigned.email,
+            subject:  taskId + ' : ' + task.taskName,
+            text: mailConstants.TASK_ID + taskId + mailConstants.HAS_BEEN_ASSIGNED_TO_YOU
         }
+        mail.sendmyMail(mailContent);
+
         console.log(task);
         res.status(200).send({data: task, message: "Success"})
-    })
+    }
+    catch(error){
+        res.status(500).send({message: error});
+                return;
+    }
 }
 
 exports.getUserByTaskId = async (req,res) => {

@@ -1,4 +1,6 @@
 const controller = require("../controller/tasks");
+const authJwt = require("../middlewares/authJwt");
+const validateinput = require("../middlewares/validateinputs")
 
 module.exports = function(app) {
     app.use(function(req, res, next) {
@@ -9,21 +11,21 @@ module.exports = function(app) {
       next();
     });
   
-    app.get("/api/tasks/recenttaskslist/:assignedUserId", controller.getRecentTasksByUser);
+    app.get("/api/tasks/recenttaskslist/:assignedUserId",authJwt.verifyToken, controller.getRecentTasksByUser);
 
-    app.get("/api/tasks/gettaskbyid/:taskId", controller.getTaskByTaskId);
+    app.get("/api/tasks/gettaskbyid/:taskId",authJwt.verifyToken, controller.getTaskByTaskId);
 
-    app.post("/api/tasks/updatetaskbytaskid", controller.updateTaskByTaskId);
+    app.post("/api/tasks/updatetaskbytaskid",[authJwt.verifyToken, validateinput.ValidateUpdateTask], controller.updateTaskByTaskId);
 
-    app.post("/api/tasks/createtask", controller.createTask);
+    app.post("/api/tasks/createtask",[authJwt.verifyToken, validateinput.ValidateCreateTask] , controller.createTask);
 
-    app.get("/api/tasks/alltaskslist/:assignedUserId", controller.getAllTasksByUser);
+    app.get("/api/tasks/alltaskslist/:assignedUserId",authJwt.verifyToken, controller.getAllTasksByUser);
 
-    app.get("/api/tasks/alltasksbyprojectid/:projectId/:taskStatus", controller.getAllTasksByProjectId);
+    app.get("/api/tasks/alltasksbyprojectid/:projectId/:taskStatus",authJwt.verifyToken, controller.getAllTasksByProjectId);
 
-    app.post("/api/tasks/updatetaskstatus", controller.updateTaskStatus);
+    app.post("/api/tasks/updatetaskstatus",authJwt.verifyToken, controller.updateTaskStatus);
 
-    app.post("/api/tasks/updateuserbytaskid", controller.updateUserTaskId);
+    app.post("/api/tasks/updateuserbytaskid",authJwt.verifyToken, controller.updateUserTaskId);
 
-    app.get("/api/tasks/getuserbytaskid/:taskid", controller.getUserByTaskId);
+    app.get("/api/tasks/getuserbytaskid/:taskid",authJwt.verifyToken, controller.getUserByTaskId);
   };

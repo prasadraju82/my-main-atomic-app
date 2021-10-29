@@ -6,7 +6,7 @@ exports.getProjectsByUser = (req, res) => {
     let emailid = req.params.emailid;
    
     console.log(req.params);
-    var userQuery = Project.find({userEmail: emailid});
+    var userQuery = Project.find({userEmail: emailid}).populate("userId");
     console.log('Test')
     userQuery.exec(function(err, docs){
         if(err){
@@ -30,7 +30,7 @@ exports.getProjectsByUser = (req, res) => {
 
 exports.getAllProjects = (req, res) => {
     
-    var userQuery = Project.find({});
+    var userQuery = Project.find({}).populate("userId");
     console.log('Test')
     userQuery.exec(function(err, docs){
         if(err){
@@ -98,10 +98,12 @@ exports.updateProjectByKey = (req, res) => {
     let userId = req.body.userId;
     let createdDateTime = Date.Now;
 
+    console.log(userId);
     console.log(projectKey)
     Project.findOneAndUpdate({"projectKey": projectKey},{"$set":{"projectName": projectName, "projectDesc": projectDesc, "projectType": projectType, "userId": userId, "updatedDateTime": Date.now()}})
         .exec(function(err, proj){
             if(err){
+                console.log(err)
                 res.status(500).send({message: err});
                 return;
             }

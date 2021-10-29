@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Double = require('@mongoosejs/double');
+var Schema = mongoose.Schema;
 
 const Task = mongoose.model(
   "Task",
@@ -12,7 +13,11 @@ const Task = mongoose.model(
     statusName: String,
     taskTypeId: String,
     taskType: String,
-    projectId: String,
+    //projectId: String,
+    projectId: {
+      type: Schema.Types.ObjectId,
+      ref: "Project"
+  },
     assignedUserId: String,
     creatorUserId: String,
     assignedUser: String,
