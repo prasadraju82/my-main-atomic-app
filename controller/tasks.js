@@ -73,14 +73,15 @@ exports.updateTaskByTaskId = async (req, res) =>{
     let updatedById = req.body.updatedById;
     let updatedByName = req.body.updatedByName;
     let statusName = req.body.statusName;
+    let estimatedTime = req.body.estimatedTime;
     //console.log(req.body);
     try{
        let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"taskName": taskName, "taskTypeId": taskType, 
-       "statusId": taskStatus, "statusName": statusName, "priorityId": taskPriority, "taskDesc":taskDesc, 
+       "statusId": taskStatus, "statusName": statusName, "priorityId": taskPriority, "taskDesc": taskDesc, "estimatedTime": estimatedTime,
        "updatedDateTime": Date.now()}}).exec()
 
        let userAssigned = await User.findOne({_id: task.assignedUserId}).exec();
-        console.log(userAssigned);
+       // console.log(userAssigned);
 
         const mailContent = {
             from: mailConstants.FROM_EMAIL_ID,
@@ -340,4 +341,34 @@ exports.getUserByTaskId = async (req,res) => {
     catch(error){
         res.status(500).send({message: error});
     }
+}
+
+exports.updateTaskFromKanbanBoard = async (req, res) => {
+    let taskId = req.body.taskId;
+    let taskStatus = req.body.statusId;
+
+    let statusName = getStatus(taskStatus);
+
+    try{
+        let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"statusId": taskStatus, "statusName":statusName, "updatedDateTime": Date.now()}}).exec()
+ 
+        let userAssigned = await User.findOne({_id: task.assignedUserId}).exec();
+         console.log(userAssigned);
+ 
+         const mailContent = {
+             from: mailConstants.FROM_EMAIL_ID,
+             to: userAssigned.email,
+             subject:  taskId + ' : ' + task.taskName,
+             text: mailConstants.TASK_ID + taskId + mailConstants.HAS_BEEN_UPDATED 
+         }
+         
+         mail.sendmyMail(mailContent);
+ 
+         console.log("Hello");
+         res.status(200).send({data: task, message: "Success"});
+     }
+     catch(error){
+         res.status(500).send({message: error});
+                 return;
+     }
 }

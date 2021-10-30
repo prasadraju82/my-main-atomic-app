@@ -28,4 +28,6 @@ module.exports = function(app) {
     app.post("/api/tasks/updateuserbytaskid",authJwt.verifyToken, controller.updateUserTaskId);
 
     app.get("/api/tasks/getuserbytaskid/:taskid",authJwt.verifyToken, controller.getUserByTaskId);
+
+    app.post("/api/tasks/updatetaskfromkanbanboard",authJwt.verifyToken, controller.updateTaskFromKanbanBoard);
   };

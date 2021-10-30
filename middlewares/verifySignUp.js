@@ -2,6 +2,8 @@ const Role = require('../model/role.js');
 const User = require('../model/user.js');
 
 const checkDuplicateEmail = (req, res, next) => {
+    
+    console.log(req.body.emailId)
     User.findOne({
         email: req.body.emailId
     }).exec((err, user) => {

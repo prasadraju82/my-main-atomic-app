@@ -3,6 +3,7 @@ const mail = require("../utility/mail/mail.js")
 const mailConstants = require("../constants/mailconstants")
 
 exports.addUser = (req, res) => {
+    console.log(req.body.emailId)
     const user = new User({
         name: req.body.userName,
         email: req.body.emailId,
@@ -16,20 +17,13 @@ exports.addUser = (req, res) => {
         updateddate: Date.Now
     }) 
 
-    const mailContent = {
-        from: 'hi2alldears@gmail.com',
-        to: req.body.emailId,
-        subject: 'You have been added to the Atomic team',
-        text: 'Log in to http://localhost:3000 with your email id'
-    }
     console.log(user);
     User.create(user).then(function(userdetails){
 
-        //mail send
         //Send mail
         const mailContent = {
             from: mailConstants.FROM_EMAIL_ID,
-            to: req.body.userEmail,
+            to: req.body.emailId,
             subject: mailConstants.YOU_HAVE_BEEN_ADDED,
             text: mailConstants.LOGGIN_TO
         }
