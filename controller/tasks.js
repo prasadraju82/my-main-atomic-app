@@ -11,7 +11,7 @@ var mongoose = require('mongoose');
 exports.getRecentTasksByUser = (req, res) => {
     let userId = req.params.assignedUserId;
     console.log(userId);
-    var taskQuery = Task.find({assignedUserId: userId}).populate("projectId").limit(6);
+    var taskQuery = Task.find({assignedUserId: userId}).sort({updatedDateTime:'desc'}).populate("projectId").limit(6);
     taskQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -50,7 +50,7 @@ exports.getTaskByTaskId = (req, res) => {
                 User.findOne({_id: doc.assignedUserId}).exec(function(err, user){
                     doc.assignedUser = user.name;
                     doc.creatorUser = user.name;
-                    doc.statusName = getStatus(doc.statusId);
+                    doc.statusName = getStatusTask(doc.statusId);
                     doc.taskType = getTaskType(doc.taskTypeId);
                     doc.priority = getPriority(doc.priorityId);
                     res.status(200).json(doc)
@@ -102,6 +102,23 @@ exports.updateTaskByTaskId = async (req, res) =>{
 }
 
 const getStatus = (statusId) => {
+    switch(statusId){
+        case 1:
+            return "Open";
+        case 2:
+            return "Re-Open";
+        case 3:
+            return "In Progress";
+        case 4:
+            return "On Staging";
+        case 5:
+            return "To Deploy";
+        default:
+            return "On Live";
+    }
+}
+
+const getStatusTask = (statusId) => {
     switch(statusId){
         case "1":
             return "Open";
@@ -228,7 +245,7 @@ const getLatestTaskNumber = () =>{
 exports.getAllTasksByUser = (req, res) => {
     let userId = req.params.assignedUserId;
     console.log(userId);
-    var taskQuery = Task.find({assignedUserId: userId}).populate("projectId");
+    var taskQuery = Task.find({assignedUserId: userId}).sort({updatedDateTime:'desc'}).populate("projectId");
     taskQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -276,7 +293,7 @@ exports.getAllTasksByProjectId = (req, res) => {
                 docs.forEach(doc => {
                     sTaskType = getTaskType(doc.taskTypeId);
                     sTaskPriority = getPriority(doc.priorityId)
-                    sTaskStatus = getStatus(doc.statusId)
+                    sTaskStatus = getStatusTask(doc.statusId)
                     result.push({id: doc.taskId, content: {taskId: doc.taskId, taskName: doc.taskName, taskType: sTaskType, taskPriority: sTaskPriority, taskStatus: sTaskStatus, statusId: doc.statusId }})
                 })
                 return res.status(200).json(result);
