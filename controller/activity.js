@@ -28,7 +28,7 @@ exports.createActivity = (req, res) => {
 }
 
 exports.getActivitiesByTaskId = (req, res) =>{
-    console.log(req);
+    //console.log(req);
     let taskid = req.params.taskid;
     console.log(taskid)
     var taskQuery = Activity.find({taskId: taskid, isActive: true});

@@ -47,7 +47,8 @@ exports.checkuser = (req, res) => {
     let password = req.body.password;
     let emailExist = false;
     console.log(emailid);
-
+    
+    
     if (!(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(emailid))) {
         return res.status(200).send({
             isEmailExist: false,
@@ -55,7 +56,7 @@ exports.checkuser = (req, res) => {
         })
     }
     
-    var userQuery = User.findOne({email: emailid, isActive: true});
+    var userQuery = User.findOne({email: emailid});
     userQuery.exec(function(err, docs){
         if(err){
             console.log(err);
@@ -74,8 +75,7 @@ exports.checkuser = (req, res) => {
             }
             else{
                 return res.status(200).send({
-                    isEmailExist: false,
-                    message: "Email id does not exist"
+                    isEmailExist: false
                 });
             }
         }
