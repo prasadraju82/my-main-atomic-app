@@ -34,11 +34,11 @@ exports.getRecentTasksByUser = (req, res) => {
 
 exports.getTaskByTaskId = (req, res) => {
     let taskId = req.params.taskId;
-    console.log(taskId);
+    //console.log(taskId);
     var taskQuery = Task.findOne({taskId: taskId});
 
     taskQuery.exec(function(err, doc){
-        console.log(doc);
+        //console.log(doc);
         if(err){
             console.log(err);
             return res.status(500).send({
@@ -47,13 +47,22 @@ exports.getTaskByTaskId = (req, res) => {
         }
         else{
             if(doc !== null){
+                console.log("creatorId" + doc.creatorUserId)
                 User.findOne({_id: doc.assignedUserId}).exec(function(err, user){
-                    doc.assignedUser = user.name;
-                    doc.creatorUser = user.name;
-                    doc.statusName = getStatusTask(doc.statusId);
-                    doc.taskType = getTaskType(doc.taskTypeId);
-                    doc.priority = getPriority(doc.priorityId);
-                    res.status(200).json(doc)
+                    console.log(user);
+                    
+                    
+                    if(doc.creatorUserId !== undefined){
+                        User.findOne({_id: doc.creatorUserId}).exec(function(err, userCreator){
+                            doc.assignedUser = user.name;
+                            doc.creatorUser = userCreator.name;
+                            doc.statusName = getStatusTask(doc.statusId);
+                            doc.taskType = getTaskType(doc.taskTypeId);
+                            doc.priority = getPriority(doc.priorityId);
+                            res.status(200).json(doc)
+                        })
+                    }
+                    
                 })
             }
             else{
@@ -329,7 +338,10 @@ exports.updateUserTaskId = async (req, res) => {
         let task = await Task.findOneAndUpdate({"taskId": taskId},{"$set":{"assignedUserId": userId, "updatedDateTime": Date.now()}}).exec();
     
         let userAssigned = await User.findOne({_id: req.body.userId}).exec();
+        let creator = await User.findOne({_id: task.creatorUserId}).exec();
         console.log(userAssigned);
+        task.assignedUser = userAssigned.name;
+        task.creatorUser = creator.name;
         const mailContent = {
             from: mailConstants.FROM_EMAIL_ID,
             to: userAssigned.email,
