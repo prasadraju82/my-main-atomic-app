@@ -5,7 +5,7 @@ Backend for Atomic - Project Management app
   1. Node.js v14.15.5 or later
   2. MongoDB 
   
-## Prerequisites
+## Getting Started
 Install the required packages by running: 
 ### `npm install`
 
